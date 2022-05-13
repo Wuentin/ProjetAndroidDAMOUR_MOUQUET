@@ -9,7 +9,7 @@ interface InterfaceAPI {
 
     @GET("/opendata/Velib_Metropole/station_information.json")
     suspend fun getStations(@Query("lastUpdatedOther") lastUpdatedOther: Int): LastUpdate
-    //suspend fun getStations(@Query("stations") size:Int): GetStationsResult
+
 
 }
 

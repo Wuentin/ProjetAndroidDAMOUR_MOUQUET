@@ -164,10 +164,17 @@ class ProjetVelib : AppCompatActivity(), OnMapReadyCallback,
             .build()
 
         val service=retrofit.create(InterfaceAPI::class.java)
+        val servicestatus=retrofit.create(InterfaceInfoAPI::class.java)
+
         runBlocking {
 
            val stations=service.getStations(0)
-           Log.d(TAG,"synchroAPI: ${stations.data.stations}")
+            val stationsStatus=servicestatus.getStationsStatus(0)
+            // Log.d(TAG,"synchroAPI: ${stations.data.stations}")
+
+            // CESAR : Sur la variable du dessous, on récupère les infos sur le stations, avec notamment le nombre de place disponible (pour poser
+            // poser son vélo) mais aussi les vélos qu'on peut louer. Faudrait avec le station_id, récuper ces info pour ensuite les insérer dans le marker (voir plus bas dans le .map)
+           Log.d(TAG,"synchroAPI: ${stationsStatus.data.stations}")
             stations.data.stations.map {
             val( station_id,  name, lat, lon, capacity)=it
 
@@ -179,7 +186,7 @@ class ProjetVelib : AppCompatActivity(), OnMapReadyCallback,
 
 
             }
-           //val users = result.results
+
 
 
 
