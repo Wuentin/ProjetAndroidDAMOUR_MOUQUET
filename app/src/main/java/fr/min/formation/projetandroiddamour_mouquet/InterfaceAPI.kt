@@ -16,4 +16,4 @@ interface InterfaceAPI {
 //data class GetStationsResult(val results : MutableList<DataJSONMODEL>)
 data class LastUpdate (val lastUpdatedOther : Int,val ttl:Int, val data:GetStationsResult)
 data class GetStationsResult(val stations : List<Station>)
-data class Station ( val station_id: String, val name: String,val lat: Double,val lon: Double,val capacity: Double)
+data class Station ( val station_id: String, val name: String,val lat: Double,val lon: Double,val capacity: Int)

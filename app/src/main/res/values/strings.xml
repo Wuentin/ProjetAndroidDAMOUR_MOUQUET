@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">ProjetAndroidDAMOUR_MOUQUET</string>
-    <string name="title_activity_maps">MapsActivity</string>
+    <string name="app_name">StationsVELIB</string>
+    <string name="title_activity_maps">Stations Velib</string>
 </resources>

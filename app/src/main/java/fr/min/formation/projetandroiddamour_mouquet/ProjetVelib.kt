@@ -14,6 +14,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.squareup.moshi.JsonReader
@@ -27,12 +28,10 @@ import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.converter.jackson.JacksonConverterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
+class ProjetVelib : AppCompatActivity(), OnMapReadyCallback,
     GoogleMap.OnMyLocationButtonClickListener {
 
     private var permissionDenied = false
@@ -62,14 +61,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
      */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-
-        // Add a marker in Sydney and move the camera
-        val sydney = LatLng(-34.0, 151.0)
-        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
-
-        enableMyLocation()
         synchroAPI()
+        enableMyLocation()
+       mMap.moveCamera(CameraUpdateFactory.newLatLng(LatLng(0.0, 0.0)))
     }
 
     /**
@@ -174,7 +168,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
 
            val stations=service.getStations(0)
            Log.d(TAG,"synchroAPI: ${stations.data.stations}")
+            stations.data.stations.map {
+            val( station_id,  name, lat, lon, capacity)=it
 
+
+                val position=LatLng(it.lat,it.lon)
+                mMap.addMarker(MarkerOptions().position(position).title(it.name).snippet("Capacité: ${it.capacity}").icon(
+                    BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)))
+
+
+
+            }
            //val users = result.results
 
 

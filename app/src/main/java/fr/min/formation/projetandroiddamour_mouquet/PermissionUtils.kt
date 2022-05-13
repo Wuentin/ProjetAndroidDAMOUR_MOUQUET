@@ -75,7 +75,7 @@ object PermissionUtils {
             super.onDismiss(dialog)
             if (finishActivity) {
                 Toast.makeText(
-                    activity, "R.string.permission_required_toast",
+                    activity, "Permission Required",
                     Toast.LENGTH_SHORT
                 ).show()
                 activity?.finish()
@@ -137,7 +137,7 @@ object PermissionUtils {
             if (finishActivity) {
                 Toast.makeText(
                     activity,
-                    "R.string.permission_required_toast",
+                    "Permission requise",
                     Toast.LENGTH_SHORT
                 ).show()
                 activity?.finish()
@@ -172,4 +172,5 @@ object PermissionUtils {
             }
         }
     }
+
 }
