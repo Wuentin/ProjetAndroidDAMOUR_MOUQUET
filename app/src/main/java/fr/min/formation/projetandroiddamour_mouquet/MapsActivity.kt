@@ -172,8 +172,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         val service=retrofit.create(InterfaceAPI::class.java)
         runBlocking {
 
-           val stations=service.getStations(5)
-           Log.d(TAG,"synchroAPI: $stations")
+           val stations=service.getStations(0)
+           Log.d(TAG,"synchroAPI: ${stations.data.stations}")
+
            //val users = result.results
 
 
