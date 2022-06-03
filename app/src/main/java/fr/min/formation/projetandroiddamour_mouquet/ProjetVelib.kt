@@ -2,13 +2,19 @@ package fr.min.formation.projetandroiddamour_mouquet
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.ContentValues.TAG
+import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.Typeface
 import android.location.Location
 import android.os.Bundle
-import android.util.Log
+import android.view.Gravity
+import android.view.View
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -16,14 +22,10 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
-import com.squareup.moshi.JsonReader
-
-
 import fr.min.formation.projetandroiddamour_mouquet.PermissionUtils.PermissionDeniedDialog.Companion.newInstance
 import fr.min.formation.projetandroiddamour_mouquet.PermissionUtils.isPermissionGranted
-import fr.min.formation.projetandroiddamour_mouquet.PermissionUtils.requestPermission
-import fr.min.formation.projetandroiddamour_mouquet.databinding.ActivityMapsBinding
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -31,72 +33,89 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 
-class ProjetVelib : AppCompatActivity(), OnMapReadyCallback,
-    GoogleMap.OnMyLocationButtonClickListener {
+class ProjetVelib : AppCompatActivity(),
+    GoogleMap.OnMyLocationButtonClickListener,
+    GoogleMap.OnMyLocationClickListener, OnMapReadyCallback,
+    ActivityCompat.OnRequestPermissionsResultCallback {
 
     private var permissionDenied = false
-    private lateinit var mMap: GoogleMap
-    private lateinit var binding: ActivityMapsBinding
+    private lateinit var map: GoogleMap
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        binding = ActivityMapsBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
+        setContentView(R.layout.activity_maps)
+        val mapFragment =
+            supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
+        mapFragment?.getMapAsync(this)
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
-        synchroAPI()
+        map = googleMap
+        //googleMap.setOnMyLocationButtonClickListener(this)
+        googleMap.setOnMyLocationClickListener(this)
         enableMyLocation()
-       mMap.moveCamera(CameraUpdateFactory.newLatLng(LatLng(0.0, 0.0)))
+        synchroAPI()
+
+
+
     }
 
     /**
      * Enables the My Location layer if the fine location permission has been granted.
      */
-
-
     @SuppressLint("MissingPermission")
     private fun enableMyLocation() {
-        if (!::mMap.isInitialized) return
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            == PackageManager.PERMISSION_GRANTED
+
+        // 1. Check if permissions are granted, if so, enable the my location layer
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
-            mMap.isMyLocationEnabled = true
-        } else {
-            // Permission to access the location is missing. Show rationale and request permission
-            requestPermission(
-                this, LOCATION_PERMISSION_REQUEST_CODE,
-                Manifest.permission.ACCESS_FINE_LOCATION, true
-            )
+            map.isMyLocationEnabled = true
+            return
         }
+
+        // 2. If if a permission rationale dialog should be shown
+        if (ActivityCompat.shouldShowRequestPermissionRationale(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) || ActivityCompat.shouldShowRequestPermissionRationale(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        ) {
+            PermissionUtils.RationaleDialog.newInstance(
+                LOCATION_PERMISSION_REQUEST_CODE, true
+            ).show(supportFragmentManager, "dialog")
+            return
+        }
+
+        // 3. Otherwise, request permission
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ),
+            LOCATION_PERMISSION_REQUEST_CODE
+        )
     }
 
-
     override fun onMyLocationButtonClick(): Boolean {
-        Toast.makeText(this, "MyLocation button clicked", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "MyLocation button clicked", Toast.LENGTH_SHORT)
+            .show()
         // Return false so that we don't consume the event and the default behavior still occurs
         // (the camera animates to the user's current position).
         return false
     }
 
-    fun onMyLocationClick(location: Location) {
-        Toast.makeText(this, "Current location:\n$location", Toast.LENGTH_LONG).show()
+    override fun onMyLocationClick(location: Location) {
+        Toast.makeText(this, "Current location:\n$location", Toast.LENGTH_LONG)
+            .show()
     }
 
     override fun onRequestPermissionsResult(
@@ -105,13 +124,22 @@ class ProjetVelib : AppCompatActivity(), OnMapReadyCallback,
         grantResults: IntArray
     ) {
         if (requestCode != LOCATION_PERMISSION_REQUEST_CODE) {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+            super.onRequestPermissionsResult(
+                requestCode,
+                permissions,
+                grantResults
+            )
             return
         }
+
         if (isPermissionGranted(
                 permissions,
                 grantResults,
                 Manifest.permission.ACCESS_FINE_LOCATION
+            ) || isPermissionGranted(
+                permissions,
+                grantResults,
+                Manifest.permission.ACCESS_COARSE_LOCATION
             )
         ) {
             // Enable the my location layer if the permission has been granted.
@@ -168,31 +196,58 @@ class ProjetVelib : AppCompatActivity(), OnMapReadyCallback,
 
         runBlocking {
 
-           val stations=service.getStations(0)
-            val stationsStatus=servicestatus.getStationsStatus(0)
-            // Log.d(TAG,"synchroAPI: ${stations.data.stations}")
+            val stations = service.getStations(0)
+            val stationsStatus = servicestatus.getStationsStatus(0)
 
-            // CESAR : Sur la variable du dessous, on récupère les infos sur le stations, avec notamment le nombre de place disponible (pour poser
-            // poser son vélo) mais aussi les vélos qu'on peut louer. Faudrait avec le station_id, récuper ces info pour ensuite les insérer dans le marker (voir plus bas dans le .map)
-           Log.d(TAG,"synchroAPI: ${stationsStatus.data.stations}")
             stations.data.stations.map {
-            val( station_id,  name, lat, lon, capacity)=it
+                val (station_id, name, lat, lon, capacity) = it
+                val stationid1 = station_id
+                val position = LatLng(it.lat, it.lon)
+                val nom = it.name
+                val capacite = it.capacity
+
+                stationsStatus.data.stations.map {
+                    val (station_id, num_bikes_available, num_docks_available) = it
+
+                    if (it.station_id == stationid1) {
+                        map.addMarker(
+                            MarkerOptions().position(position).title(nom)
+                                .snippet("Capacité: ${capacite}" + "\n" + "Vélo Disponible : ${it.num_bikes_available}" + "\n" + "Emplacements disponibles : ${it.num_docks_available}")
+                                .icon(
+                                    BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                                )
+                        )
+                        map.setInfoWindowAdapter(object : GoogleMap.InfoWindowAdapter {
+                            override fun getInfoWindow(arg0: Marker): View? {
+                                return null
+                            }
+
+                            override fun getInfoContents(marker: Marker): View {
+                                val context: Context = applicationContext
+                                val info = LinearLayout(context)
+                                info.orientation = LinearLayout.VERTICAL
+                                val title = TextView(context)
+                                title.setTextColor(Color.BLACK)
+                                title.gravity = Gravity.CENTER
+                                title.setTypeface(null, Typeface.BOLD)
+                                title.text = marker.title
+                                val snippet = TextView(context)
+                                snippet.setTextColor(Color.GRAY)
+                                snippet.text = marker.snippet
+                                info.addView(title)
+                                info.addView(snippet)
+                                return info
+                            }
+                        })
+                    }
 
 
-                val position=LatLng(it.lat,it.lon)
-                mMap.addMarker(MarkerOptions().position(position).title(it.name).snippet("Capacité: ${it.capacity}").icon(
-                    BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)))
-
-
+                }
 
             }
-
-
-
 
         }
 
     }
-
 
 }
