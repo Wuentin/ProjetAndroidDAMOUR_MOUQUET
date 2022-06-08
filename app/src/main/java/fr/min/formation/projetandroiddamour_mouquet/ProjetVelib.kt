@@ -3,6 +3,7 @@ package fr.min.formation.projetandroiddamour_mouquet
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
@@ -10,6 +11,7 @@ import android.location.Location
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -47,6 +49,13 @@ class ProjetVelib : AppCompatActivity(),
         val mapFragment =
             supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
         mapFragment?.getMapAsync(this)
+
+
+        findViewById<Button>(R.id.button_fav)
+            .setOnClickListener {
+                val intent = Intent(this, Favoris::class.java)
+                startActivity(intent)
+            }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
