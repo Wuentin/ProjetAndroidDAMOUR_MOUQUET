@@ -31,13 +31,10 @@
         </activity>
         <activity
             android:name=".Favoris"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="true" />
+        <activity
+            android:name=".Ajout_Favoris"
+            android:exported="true" />
     </application>
 
 </manifest>

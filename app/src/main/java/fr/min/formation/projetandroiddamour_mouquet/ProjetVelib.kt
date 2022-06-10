@@ -5,13 +5,15 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.database.DatabaseErrorHandler
 import android.graphics.Color
 import android.graphics.Typeface
 import android.location.Location
 import android.os.Bundle
 import android.view.Gravity
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
-import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -28,6 +30,8 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import fr.min.formation.projetandroiddamour_mouquet.PermissionUtils.PermissionDeniedDialog.Companion.newInstance
 import fr.min.formation.projetandroiddamour_mouquet.PermissionUtils.isPermissionGranted
+import fr.min.formation.projetandroiddamour_mouquet.databinding.AjoutFavorisBinding
+import fr.min.formation.projetandroiddamour_mouquet.model.StationModel
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -42,6 +46,7 @@ class ProjetVelib : AppCompatActivity(),
 
     private var permissionDenied = false
     private lateinit var map: GoogleMap
+    var context = this
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,12 +56,31 @@ class ProjetVelib : AppCompatActivity(),
         mapFragment?.getMapAsync(this)
 
 
-        findViewById<Button>(R.id.button_fav)
-            .setOnClickListener {
-                val intent = Intent(this, Favoris::class.java)
-                startActivity(intent)
-            }
     }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_nav,menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        when(item.itemId){
+            R.id.menu_favori -> {val intent = Intent(this, Favoris::class.java)
+                startActivity(intent)}
+            R.id.menu_ajout -> {
+                val intent = Intent(this, Ajout_Favoris::class.java)
+                startActivity(intent)
+}
+
+        R.id.menu_accueil -> {val intent = Intent(this, ProjetVelib::class.java)
+            startActivity(intent)}
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+
+
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
@@ -64,7 +88,6 @@ class ProjetVelib : AppCompatActivity(),
         googleMap.setOnMyLocationClickListener(this)
         enableMyLocation()
         synchroAPI()
-
 
 
     }
@@ -185,8 +208,13 @@ class ProjetVelib : AppCompatActivity(),
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
     }
 
+    var Liste_station_globale_nom = ArrayList<String>()
+    var Liste_station_globale_capacite = ArrayList<Int>()
+    var Liste_station_globale_velDispo = ArrayList<Int>()
+    var Liste_station_globale_emplacement = ArrayList<Int>()
 
     private fun synchroAPI() {
+
         val httpLoggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
@@ -200,8 +228,8 @@ class ProjetVelib : AppCompatActivity(),
             .client(client)
             .build()
 
-        val service=retrofit.create(InterfaceAPI::class.java)
-        val servicestatus=retrofit.create(InterfaceInfoAPI::class.java)
+        val service = retrofit.create(InterfaceAPI::class.java)
+        val servicestatus = retrofit.create(InterfaceInfoAPI::class.java)
 
         runBlocking {
 
@@ -212,6 +240,8 @@ class ProjetVelib : AppCompatActivity(),
                 val (station_id, name, lat, lon, capacity) = it
                 val stationid1 = station_id
                 val position = LatLng(it.lat, it.lon)
+                val latitude = it.lat
+                val longitude = it.lon
                 val nom = it.name
                 val capacite = it.capacity
 
@@ -221,11 +251,13 @@ class ProjetVelib : AppCompatActivity(),
                     if (it.station_id == stationid1) {
                         map.addMarker(
                             MarkerOptions().position(position).title(nom)
-                                .snippet("Capacité: ${capacite}" + "\n" + "Vélo Disponible : ${it.num_bikes_available}" + "\n" + "Emplacements disponibles : ${it.num_docks_available}")
+                                .snippet("Identifiant: ${station_id}" + "\n" + "Capacité: ${capacite}" + "\n" + "Vélo Disponible : ${it.num_bikes_available}" + "\n" + "Emplacements disponibles : ${it.num_docks_available}")
                                 .icon(
                                     BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
                                 )
+
                         )
+
                         map.setInfoWindowAdapter(object : GoogleMap.InfoWindowAdapter {
                             override fun getInfoWindow(arg0: Marker): View? {
                                 return null
@@ -248,15 +280,31 @@ class ProjetVelib : AppCompatActivity(),
                                 return info
                             }
                         })
-                    }
 
+                        var Ajoutstation = StationModel(station_id,nom,capacite,it.num_bikes_available,it.num_docks_available)
+                        var db = DataBaseSQLite(context)
+                        db.insertionDonnee(Ajoutstation)
+
+
+
+                       // Liste_station_globale_nom.add(nom)
+                        //Liste_station_globale_capacite.add(capacite)
+                        //Liste_station_globale_velDispo.add(num_bikes_available)
+                        //Liste_station_globale_emplacement.add(num_docks_available)
+
+
+                    }
 
                 }
 
             }
 
-        }
 
+           // intent.putStringArrayListExtra("global_nom",Liste_station_globale_nom)
+
+
+
+        }
     }
 
 }

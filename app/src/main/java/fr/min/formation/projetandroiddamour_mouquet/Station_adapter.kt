@@ -25,26 +25,19 @@ class StationAdapter(val stationList: List<StationModel>) :
     override fun onBindViewHolder(holder: StationViewHolder, position: Int) {
         val station = stationList[position]
 
-        holder.view.setOnClickListener {
-            val context = it.context
-            val intent = Intent(context, ProjetVelib::class.java)
-            intent.putExtra("client_id", position)
-            context.startActivity(intent)
-        }
-
 
 
         val station_nom = holder.view.findViewById<TextView>(R.id.adapter_nom)
             station_nom.text = station.nom
 
         val station_capacite = holder.view.findViewById<TextView>(R.id.adapter_capacité)
-        station_capacite.text = station.capacite
+        station_capacite.text = "Capacité : " + station.capacite
 
         val station_veloDispo = holder.view.findViewById<TextView>(R.id.adapter_velo_dispo)
-        station_veloDispo.text = station.disponibilite
+        station_veloDispo.text = "Vélos disponibles : " + station.disponibilite
 
         val station_emplacement = holder.view.findViewById<TextView>(R.id.adapter_emplacement_dispo)
-        station_emplacement.text = station.emplacement
+        station_emplacement.text = "Emplacements disponibles : " + station.emplacement
 
 
 
