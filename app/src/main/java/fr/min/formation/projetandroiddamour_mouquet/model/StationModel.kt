@@ -8,7 +8,7 @@ class StationModel (
     var name: String,
     var capacity: Int,
     var num_bikes_available: Int,
-    var num_docks_available: Int)
+    var num_docks_available: Int,)
 
 
 

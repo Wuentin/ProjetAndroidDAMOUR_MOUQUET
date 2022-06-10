@@ -9,7 +9,10 @@ import android.database.DatabaseErrorHandler
 import android.graphics.Color
 import android.graphics.Typeface
 import android.location.Location
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
@@ -56,6 +59,7 @@ class ProjetVelib : AppCompatActivity(),
         mapFragment?.getMapAsync(this)
 
 
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -87,7 +91,8 @@ class ProjetVelib : AppCompatActivity(),
         //googleMap.setOnMyLocationButtonClickListener(this)
         googleMap.setOnMyLocationClickListener(this)
         enableMyLocation()
-        synchroAPI()
+        if(isOnline(context)){synchroAPI()}
+
 
 
     }
@@ -251,7 +256,7 @@ class ProjetVelib : AppCompatActivity(),
                     if (it.station_id == stationid1) {
                         map.addMarker(
                             MarkerOptions().position(position).title(nom)
-                                .snippet("Identifiant: ${station_id}" + "\n" + "Capacité: ${capacite}" + "\n" + "Vélo Disponible : ${it.num_bikes_available}" + "\n" + "Emplacements disponibles : ${it.num_docks_available}")
+                                .snippet( "Capacité: ${capacite}" + "\n" + "Vélo Disponible : ${it.num_bikes_available}" + "\n" + "Emplacements disponibles : ${it.num_docks_available}")
                                 .icon(
                                     BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
                                 )
@@ -305,6 +310,26 @@ class ProjetVelib : AppCompatActivity(),
 
 
         }
+    }
+    @SuppressLint("ServiceCast", "MissingPermission")
+    fun isOnline(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val capabilities =
+            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        if (capabilities != null) {
+            if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                Log.i("Internet", "NetworkCapabilities.TRANSPORT_CELLULAR")
+                return true
+            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                Log.i("Internet", "NetworkCapabilities.TRANSPORT_WIFI")
+                return true
+            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                Log.i("Internet", "NetworkCapabilities.TRANSPORT_ETHERNET")
+                return true
+            }
+        }
+        return false
     }
 
 }

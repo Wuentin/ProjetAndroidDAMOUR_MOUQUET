@@ -43,8 +43,6 @@ class Ajout_Favoris : AppCompatActivity() {
                     db.ajoutFavoris(it)
                 }
             }
-            Toast.makeText(this,"$valFavClick",Toast.LENGTH_LONG).show()
-            db.deltable()
         }
 
 

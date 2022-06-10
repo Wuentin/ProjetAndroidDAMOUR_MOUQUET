@@ -31,8 +31,6 @@ class Favoris : AppCompatActivity() {
         var stationList = db.recupFavoris()
 
 
-        //var stationList = listOf(StationModel("esef","ih",5,5,5))
-       // val stationList = StationModel.bdd(40)
         stationAdapter = StationAdapter(stationList)
         recyclerView.adapter = stationAdapter
 

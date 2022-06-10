@@ -38,7 +38,8 @@ class StationAdapter(val stationList: List<StationModel>) :
 
         val station_emplacement = holder.view.findViewById<TextView>(R.id.adapter_emplacement_dispo)
         station_emplacement.text = "Emplacements disponibles : " + station.emplacement
-
+        val imageVelo = holder.view.findViewById<ImageView>(R.id.adapter_image_velo)
+        imageVelo.setImageResource(R.drawable.bike)
 
 
 
