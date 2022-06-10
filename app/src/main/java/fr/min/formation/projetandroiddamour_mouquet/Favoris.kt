@@ -32,7 +32,9 @@ class Favoris : AppCompatActivity() {
 
 
         stationAdapter = StationAdapter(stationList)
+
         recyclerView.adapter = stationAdapter
+
 
     }
 

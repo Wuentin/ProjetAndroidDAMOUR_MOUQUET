@@ -4,7 +4,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import androidx.core.database.getShortOrNull
 import androidx.core.database.getStringOrNull
 import fr.min.formation.projetandroiddamour_mouquet.model.StationModel
 
@@ -15,10 +14,11 @@ val col_nom = "Nom"
 val col_capacite = "Capacite"
 val col_veloDispo = "VeloDispo"
 val col_emplacement = "Emplacement"
+val col_latitude = "Latitude"
+val col_longitude = "Longitude"
 
 
-
-class DataBaseSQLite(context: Context) : SQLiteOpenHelper(context,"DBStation",null,1){
+class DataBaseSQLite(context: Context) : SQLiteOpenHelper(context, "DBStation", null, 1) {
     override fun onCreate(db: SQLiteDatabase?) {
 
 
@@ -29,27 +29,31 @@ class DataBaseSQLite(context: Context) : SQLiteOpenHelper(context,"DBStation",nu
     }
 
 
-        fun insertionDonnee(station: StationModel){
+    fun insertionDonnee(station: StationModel){
             val db = this.writableDatabase
 
             val create_table = "CREATE TABLE IF NOT EXISTS " + table_principale + " (" +
-                    col_id +" VARCHAR(256) NOT NULL PRIMARY KEY,"+
-                    col_nom +" VARCHAR(256),"+
-                    col_capacite +" INTEGER,"+
-                    col_veloDispo +" INTEGER,"+
-                    col_emplacement +" INTEGER)";
+                    col_id + " VARCHAR(256) NOT NULL PRIMARY KEY," +
+                    col_nom + " VARCHAR(256)," +
+                    col_capacite + " INTEGER," +
+                    col_veloDispo + " INTEGER," +
+                    col_emplacement + " INTEGER," +
+                    col_latitude + " DOUBLE," +
+                    col_longitude + " DOUBLE)"
 
 
-            db?.execSQL(create_table)
-            var valeurs = ContentValues()
-            valeurs.put(col_id,station.station_id)
-            valeurs.put(col_nom,station.name)
-            valeurs.put(col_capacite,station.capacity)
-            valeurs.put(col_veloDispo,station.num_bikes_available)
-            valeurs.put(col_emplacement,station.num_docks_available)
+        db?.execSQL(create_table)
+        var valeurs = ContentValues()
+        valeurs.put(col_id, station.station_id)
+        valeurs.put(col_nom, station.name)
+        valeurs.put(col_capacite, station.capacity)
+        valeurs.put(col_veloDispo, station.num_bikes_available)
+        valeurs.put(col_emplacement, station.num_docks_available)
+        valeurs.put(col_latitude, station.latitude)
+        valeurs.put(col_longitude, station.longitude)
 
-            var envoie = db.insert(table_principale,null,valeurs)
-        }
+        var envoie = db.insert(table_principale, null, valeurs)
+    }
 
 
         fun recuperationStations(): MutableList<StationModel> {
@@ -61,11 +65,14 @@ class DataBaseSQLite(context: Context) : SQLiteOpenHelper(context,"DBStation",nu
             val result = db.rawQuery(query,null)
             if (result.moveToFirst()){
                 do {
-                    var ajoutStation = StationModel(result.getStringOrNull(0).toString(),
+                    var ajoutStation = StationModel(
+                        result.getStringOrNull(0).toString(),
                         result.getStringOrNull(1).toString(),
                         result.getStringOrNull(2)!!.toInt(),
                         result.getStringOrNull(3)!!.toInt(),
-                        result.getStringOrNull(4)!!.toInt()
+                        result.getStringOrNull(4)!!.toInt(),
+                        result.getStringOrNull(5)!!.toDouble(),
+                        result.getStringOrNull(6)!!.toDouble()
                     )
 
                     liste_Noms.add(ajoutStation)
@@ -87,11 +94,14 @@ class DataBaseSQLite(context: Context) : SQLiteOpenHelper(context,"DBStation",nu
         val result = db.rawQuery(query,null)
         if (result.moveToFirst()){
             do {
-                var ajoutStationFav = StationModel(result.getStringOrNull(0).toString(),
+                var ajoutStationFav = StationModel(
+                    result.getStringOrNull(0).toString(),
                     result.getStringOrNull(1).toString(),
                     result.getStringOrNull(2)!!.toInt(),
                     result.getStringOrNull(3)!!.toInt(),
-                    result.getStringOrNull(4)!!.toInt()
+                    result.getStringOrNull(4)!!.toInt(),
+                    result.getStringOrNull(5)!!.toDouble(),
+                    result.getStringOrNull(6)!!.toDouble()
                 )
 
                 liste_Noms.add(ajoutStationFav)
@@ -128,22 +138,26 @@ class DataBaseSQLite(context: Context) : SQLiteOpenHelper(context,"DBStation",nu
     fun ajoutFavoris(station: StationModel){
         val db = this.writableDatabase
         val create_favoris = "CREATE TABLE IF NOT EXISTS " + table_favoris + " (" +
-                col_id +" VARCHAR(256),"+
-                col_nom +" VARCHAR(256),"+
-                col_capacite +" INTEGER,"+
-                col_veloDispo +" INTEGER,"+
-                col_emplacement +" INTEGER)";
+                col_id + " VARCHAR(256)," +
+                col_nom + " VARCHAR(256)," +
+                col_capacite + " INTEGER," +
+                col_veloDispo + " INTEGER," +
+                col_emplacement + " INTEGER," +
+                col_latitude + " DOUBLE," +
+                col_longitude + " DOUBLE)"
         db?.execSQL(create_favoris)
 
 
         var valeurs = ContentValues()
-        valeurs.put(col_id,station.station_id)
-        valeurs.put(col_nom,station.name)
-        valeurs.put(col_capacite,station.capacity)
-        valeurs.put(col_veloDispo,station.num_bikes_available)
-        valeurs.put(col_emplacement,station.num_docks_available)
+        valeurs.put(col_id, station.station_id)
+        valeurs.put(col_nom, station.name)
+        valeurs.put(col_capacite, station.capacity)
+        valeurs.put(col_veloDispo, station.num_bikes_available)
+        valeurs.put(col_emplacement, station.num_docks_available)
+        valeurs.put(col_latitude, station.latitude)
+        valeurs.put(col_longitude, station.longitude)
 
-        var envoie = db.insert(table_favoris,null,valeurs)
+        var envoie = db.insert(table_favoris, null, valeurs)
     }
 
     fun deltable(){

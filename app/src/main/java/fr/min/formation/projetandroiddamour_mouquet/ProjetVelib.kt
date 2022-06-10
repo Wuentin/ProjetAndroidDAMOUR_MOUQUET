@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.database.DatabaseErrorHandler
 import android.graphics.Color
 import android.graphics.Typeface
 import android.location.Location
@@ -23,7 +22,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
@@ -33,7 +31,6 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import fr.min.formation.projetandroiddamour_mouquet.PermissionUtils.PermissionDeniedDialog.Companion.newInstance
 import fr.min.formation.projetandroiddamour_mouquet.PermissionUtils.isPermissionGranted
-import fr.min.formation.projetandroiddamour_mouquet.databinding.AjoutFavorisBinding
 import fr.min.formation.projetandroiddamour_mouquet.model.StationModel
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
@@ -88,11 +85,13 @@ class ProjetVelib : AppCompatActivity(),
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-        //googleMap.setOnMyLocationButtonClickListener(this)
         googleMap.setOnMyLocationClickListener(this)
         enableMyLocation()
-        if(isOnline(context)){synchroAPI()}
-
+        if (isOnline(context)) {
+            synchroAPI(true)
+        } else {
+            synchroAPI(false)
+        }
 
 
     }
@@ -218,28 +217,28 @@ class ProjetVelib : AppCompatActivity(),
     var Liste_station_globale_velDispo = ArrayList<Int>()
     var Liste_station_globale_emplacement = ArrayList<Int>()
 
-    private fun synchroAPI() {
+    private fun synchroAPI(Internet: Boolean) {
+        if (Internet) {
+            val httpLoggingInterceptor = HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            }
+            val client = OkHttpClient.Builder()
+                .addInterceptor(httpLoggingInterceptor)
+                .build()
 
-        val httpLoggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
-        val client = OkHttpClient.Builder()
-            .addInterceptor(httpLoggingInterceptor)
-            .build()
+            val retrofit = Retrofit.Builder()
+                .baseUrl("https://velib-metropole-opendata.smoove.pro/")
+                .addConverterFactory(MoshiConverterFactory.create())
+                .client(client)
+                .build()
 
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://velib-metropole-opendata.smoove.pro/")
-            .addConverterFactory(MoshiConverterFactory.create())
-            .client(client)
-            .build()
+            val service = retrofit.create(InterfaceAPI::class.java)
+            val servicestatus = retrofit.create(InterfaceInfoAPI::class.java)
 
-        val service = retrofit.create(InterfaceAPI::class.java)
-        val servicestatus = retrofit.create(InterfaceInfoAPI::class.java)
+            runBlocking {
 
-        runBlocking {
-
-            val stations = service.getStations(0)
-            val stationsStatus = servicestatus.getStationsStatus(0)
+                val stations = service.getStations(0)
+                val stationsStatus = servicestatus.getStationsStatus(0)
 
             stations.data.stations.map {
                 val (station_id, name, lat, lon, capacity) = it
@@ -286,17 +285,17 @@ class ProjetVelib : AppCompatActivity(),
                             }
                         })
 
-                        var Ajoutstation = StationModel(station_id,nom,capacite,it.num_bikes_available,it.num_docks_available)
+                        var Ajoutstation = StationModel(
+                            station_id,
+                            nom,
+                            capacite,
+                            it.num_bikes_available,
+                            it.num_docks_available,
+                            latitude,
+                            longitude
+                        )
                         var db = DataBaseSQLite(context)
                         db.insertionDonnee(Ajoutstation)
-
-
-
-                       // Liste_station_globale_nom.add(nom)
-                        //Liste_station_globale_capacite.add(capacite)
-                        //Liste_station_globale_velDispo.add(num_bikes_available)
-                        //Liste_station_globale_emplacement.add(num_docks_available)
-
 
                     }
 
@@ -304,12 +303,55 @@ class ProjetVelib : AppCompatActivity(),
 
             }
 
+            }
+        } else {
 
-           // intent.putStringArrayListExtra("global_nom",Liste_station_globale_nom)
+            var db = DataBaseSQLite(this)
+            var stationList = db.recupFavoris()
 
+            if (stationList.isNotEmpty())
+                for (index in 0 until stationList.size) {
+
+                    map.addMarker(
+                        MarkerOptions().position(
+                            LatLng(
+                                stationList[index].latitude,
+                                stationList[index].longitude
+                            )
+                        ).title(stationList[index].nom)
+                            .snippet("Capacité: ${stationList[index].capacity}" + "\n" + "Vélo Disponible : ${stationList[index].num_bikes_available}" + "\n" + "Emplacements disponibles : ${stationList[index].num_docks_available}")
+                            .icon(
+                                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE)
+                            )
+                    )
+                    map.setInfoWindowAdapter(object : GoogleMap.InfoWindowAdapter {
+                        override fun getInfoWindow(arg0: Marker): View? {
+                            return null
+                        }
+
+                        override fun getInfoContents(marker: Marker): View {
+                            val context: Context = applicationContext
+                            val info = LinearLayout(context)
+                            info.orientation = LinearLayout.VERTICAL
+                            val title = TextView(context)
+                            title.setTextColor(Color.BLACK)
+                            title.gravity = Gravity.CENTER
+                            title.setTypeface(null, Typeface.BOLD)
+                            title.text = marker.title
+                            val snippet = TextView(context)
+                            snippet.setTextColor(Color.GRAY)
+                            snippet.text = marker.snippet
+                            info.addView(title)
+                            info.addView(snippet)
+                            return info
+                        }
+                    })
+
+                }
 
 
         }
+    }
     }
     @SuppressLint("ServiceCast", "MissingPermission")
     fun isOnline(context: Context): Boolean {
@@ -332,4 +374,4 @@ class ProjetVelib : AppCompatActivity(),
         return false
     }
 
-}
+
