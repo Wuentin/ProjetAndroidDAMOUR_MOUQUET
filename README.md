@@ -17,7 +17,7 @@ Application mobile sur la plate-forme Android réalisé avec le langage Kotlin.
 ## Aide au lancement :
 
 Au lancement de l'application vous arriverez sur la carte du monde, vous aurez la possibilité de recentrer la caméra avec le bouton sur la droite géolocalisation.
-Sur le volet en haut à droite, vous avez droits boutons :
+Sur le volet en haut à droite, vous avez trois boutons :
 - Le bouton en vert qui vous permet de rajouter vos stations en favoris, vous aurez la possibilité de rechercher vos stations favorites.
 - Le coeur vous permettra d'accèder à vos stations favorites.
 - La carte vous permet de recharger la carte et les données des stations.
