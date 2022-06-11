@@ -30,3 +30,4 @@ Cette application est loin d'être parfaite, il reste des points à améliorer :
 - Chargement très long pour recharger l'application.
 - Nous n'avons pas réussi à positionner la caméra de l'utilisateur sur sa position au lancement de l'application.
 - Nous avons eu des problèmes sur l'implémentation d'une fonction "supprimer" de la liste des favoris. Elle n'est donc pas disponible.
+- Nous avons eu un problème sur l'update des favoris, nous avons des stations qui comportent des caractères " ' ", et nous n'avons pas réussi à les enlever, ce qui provoque une erreur dans la requête sql.
