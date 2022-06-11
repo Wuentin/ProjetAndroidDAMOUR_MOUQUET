@@ -30,19 +30,7 @@ class DataBaseSQLite(context: Context) : SQLiteOpenHelper(context, "DBStation", 
 
 
     fun insertionDonnee(station: StationModel){
-            val db = this.writableDatabase
-
-            val create_table = "CREATE TABLE IF NOT EXISTS " + table_principale + " (" +
-                    col_id + " VARCHAR(256) NOT NULL PRIMARY KEY," +
-                    col_nom + " VARCHAR(256)," +
-                    col_capacite + " INTEGER," +
-                    col_veloDispo + " INTEGER," +
-                    col_emplacement + " INTEGER," +
-                    col_latitude + " DOUBLE," +
-                    col_longitude + " DOUBLE)"
-
-
-        db?.execSQL(create_table)
+        val db = this.writableDatabase
         var valeurs = ContentValues()
         valeurs.put(col_id, station.station_id)
         valeurs.put(col_nom, station.name)
@@ -160,13 +148,77 @@ class DataBaseSQLite(context: Context) : SQLiteOpenHelper(context, "DBStation", 
         var envoie = db.insert(table_favoris, null, valeurs)
     }
 
-    fun deltable(){
-        val db = this.readableDatabase
-        val query =  "DROP TABLE Favoris"
-        val result = db.rawQuery(query,null)
+   fun creation_table(){
+       val db = this.writableDatabase
 
-        val query2 =  "DROP TABLE Station"
-        val result2 = db.rawQuery(query2,null)
+       val create_table = "CREATE TABLE IF NOT EXISTS " + table_principale + " (" +
+               col_id + " VARCHAR(256) NOT NULL PRIMARY KEY," +
+               col_nom + " VARCHAR(256)," +
+               col_capacite + " INTEGER," +
+               col_veloDispo + " INTEGER," +
+               col_emplacement + " INTEGER," +
+               col_latitude + " DOUBLE," +
+               col_longitude + " DOUBLE)"
+
+
+       db?.execSQL(create_table)
+   }
+    fun delete(){
+        val db = this.writableDatabase
+
+        val query= "DELETE FROM $table_principale"
+        db?.execSQL(query)
+    }
+
+
+    fun recupNomStationFavoris(): MutableList<String> {
+
+
+        var liste_Noms : MutableList<String> = ArrayList()
+        val db = this.readableDatabase
+        val query =  "Select Nom from " + table_favoris
+
+        val result = db.rawQuery(query,null)
+        if (result.moveToFirst()){
+            do {
+                var nomRecup = result.getString(0)
+                liste_Noms.add(nomRecup)
+            } while (result.moveToNext())
+        }
+
+        result.close()
+        db.close()
+        return liste_Noms
+    }
+
+
+
+    fun update(station: StationModel) {
+
+        val db = this.writableDatabase
+
+
+        val valeur_id = station.station_id
+        val valeur_name = station.name
+        val valeur_capacite = station.capacity
+        val valeur_veloDispo = station.num_bikes_available
+        val valeur_emplacement = station.num_docks_available
+        val valeur_latitude = station.latitude
+        val valeur_longitude = station.longitude
+
+        // .contains ne détecte pas le '
+        if (valeur_name.contains("'")){valeur_name.replace("'"," ")}
+        val query =
+            " UPDATE " + table_favoris + " SET "+ col_nom + " = " + "'$valeur_name'" + "," +
+                    col_capacite + " = " +"$valeur_capacite" + "," +
+                    col_veloDispo + " = " + "$valeur_veloDispo" + "," +
+                    col_emplacement + " = " + "$valeur_emplacement" + "," +
+                    col_latitude + " = " + "$valeur_latitude" + "," +
+                    col_longitude + " = " + "$valeur_longitude"+
+                    " WHERE " + col_nom + " = " + "'$valeur_name'"
+
+                    db?.execSQL(query)
+
 
     }
 

@@ -218,6 +218,10 @@ class ProjetVelib : AppCompatActivity(),
     var Liste_station_globale_emplacement = ArrayList<Int>()
 
     private fun synchroAPI(Internet: Boolean) {
+        var db = DataBaseSQLite(context)
+        db.creation_table()
+        db.delete()
+
         if (Internet) {
             val httpLoggingInterceptor = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
@@ -294,9 +298,27 @@ class ProjetVelib : AppCompatActivity(),
                             latitude,
                             longitude
                         )
-                        var db = DataBaseSQLite(context)
+
+
                         db.insertionDonnee(Ajoutstation)
 
+                        //Partie uptade des favoris qui ne marche pas.
+                        /*var stationListRechercheFavoris = db.recupNomStation()
+                        if (stationListRechercheFavoris.isNotEmpty())
+                            for (index in 0 until stationListRechercheFavoris.size) {
+
+                                if (stationListRechercheFavoris[index]==nom){
+                                    val station=StationModel( station_id,
+                                     name,
+                                     capacity,
+                                     num_bikes_available,
+                                     num_docks_available,
+                                     latitude,
+                                     longitude)
+
+                                    db.update(station)
+                                }
+                            }*/
                     }
 
                 }
@@ -306,7 +328,7 @@ class ProjetVelib : AppCompatActivity(),
             }
         } else {
 
-            var db = DataBaseSQLite(this)
+
             var stationList = db.recupFavoris()
 
             if (stationList.isNotEmpty())
@@ -351,6 +373,14 @@ class ProjetVelib : AppCompatActivity(),
 
 
         }
+
+
+
+
+
+
+
+
     }
     }
     @SuppressLint("ServiceCast", "MissingPermission")
